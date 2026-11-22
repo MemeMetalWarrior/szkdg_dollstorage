@@ -5,34 +5,34 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using System.Net.NetworkInformation;
 
-namespace Client
+namespace serverconn
 {
 	internal class Program
 	{
+		static byte[] Buffer {  get; set; }
 		static Socket sck;
+
 		static void Main(string[] args)
 		{
 			sck = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-			IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1234);
-			try
-			{
-				sck.Connect(localEndPoint);
-			}
-			catch {
-				Console.WriteLine("Nem tud capcsolódni");
-				Main(args);
-			}
-			Console.Write("Enter text:  ");
-			string text = Console.ReadLine();
-			byte[] data = Encoding.UTF8.GetBytes(text);
+			sck.Bind(new IPEndPoint(0, 1234));
+			sck.Listen(100);
 
-			sck.Send(data);
-			Console.WriteLine("Elküldve \r\n");
-			Console.WriteLine("PRESS ANY KEY!");
+			Socket accepted = sck.Accept();
+			Buffer = new byte[accepted.ReceiveBufferSize];
+			Console.WriteLine("Mükszik");
+			int bytesRead = accepted.Receive(Buffer);
+			Console.WriteLine("Mükszik 2");
+			byte[] formatted = new byte[bytesRead];
+			for (int i = 0; i < bytesRead; ++i)
+			{
+				formatted[i] = Buffer[i];
+			}
+			string strData = Encoding.UTF8.GetString(formatted);
+			Console.WriteLine(strData + "\r\n");
 			Console.ReadKey();
-			sck.Close();
+			accepted.Close();
 		}
 	}
 }
